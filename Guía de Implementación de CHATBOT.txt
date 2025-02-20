@@ -1,0 +1,74 @@
+Guía de Implementación de RAG con LangChain y OpenAI
+1. Herramientas empleadas
+•	Jupyter Notebook: Desarrollo inicial y pruebas del código.
+•	Visual Studio Code: Migración del código desde Jupyter para implementación en Streamlit.
+•	Streamlit: Creación de una interfaz interactiva para consultas en tiempo real.
+•	LangChain: Implementación de Retrieval-Augmented Generation (RAG) para consultas basadas en documentos.
+•	OpenAI API: Uso del modelo GPT-4 para respuestas generadas con contexto.
+•	FAISS: Base de datos vectorial para búsqueda eficiente de fragmentos de texto.
+•	GitHub: Repositorio para control de versiones y documentación del proyecto.
+
+
+2. Arquitectura utilizada
+El proyecto sigue la arquitectura RAG (Retrieval-Augmented Generation):
+1.	Carga de documentos: Se lee un archivo de texto con la información relevante.
+2.	Preprocesamiento: El texto se divide en fragmentos utilizando CharacterTextSplitter.
+3.	Almacenamiento vectorial: Se indexan los fragmentos en FAISS con OpenAIEmbeddings.
+4.	Consulta y recuperación: Se usa un RetrievalQA para buscar fragmentos relevantes antes de enviar la pregunta al modelo GPT-4.
+5.	Interfaz en Streamlit: Se desarrolla una UI interactiva para hacer preguntas en tiempo real.
+
+
+3. Instalación y configuración
+Para ejecutar el proyecto, se deben instalar las siguientes dependencias:
+pip install langchain langchain-openai faiss-cpu streamlit
+
+Luego, se configura la API Key de OpenAI:
+import os
+os.environ["OPENAI_API_KEY"] = "La API KEY asignada"
+
+
+4. Código principal
+import os
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from langchain.chains import RetrievalQA
+from langchain.vectorstores import FAISS
+from langchain.text_splitter import CharacterTextSplitter
+import streamlit as st
+
+# Configurar API Key
+os.environ["OPENAI_API_KEY"] = "tu-api-key"
+
+# Cargar documento
+def cargar_documento(ruta):
+    with open(ruta, "r", encoding="utf-8") as file:
+        return file.read()
+
+texto = cargar_documento("texto_circular.txt")
+
+# Procesamiento
+tsplitter = CharacterTextSplitter(chunk_size=1400, chunk_overlap=50)
+splits = tsplitter.split_text(texto)
+vectorstore = FAISS.from_texts(splits, OpenAIEmbeddings())
+qa = RetrievalQA.from_chain_type(
+    llm=ChatOpenAI(model_name="gpt-4"),
+    chain_type="stuff",
+    retriever=vectorstore.as_retriever()
+)
+
+# Interfaz Streamlit
+st.title("Chatbot de Consulta de Documentos")
+pregunta = st.text_input("Haz una pregunta sobre la circular:")
+if pregunta:
+    respuesta = qa.run(pregunta)
+    st.write("Respuesta:", respuesta)
+
+
+
+5. Decisiones clave
+•	Migración de Jupyter a VS Code: Para facilitar la integración con Streamlit.
+•	Uso de FAISS: Para mejorar el rendimiento en la búsqueda de fragmentos.
+•	Implementación de Streamlit: Para permitir consultas dinámicas en tiempo real.
+
+
+6. Repositorio GitHub
+https://github.com/BeiliEspejo/CHATBOT..git
